@@ -80,15 +80,15 @@
 **目标**：可添加到手机桌面
 
 ### 任务
-- [ ] 创建 manifest.json
-- [ ] 注册 Service Worker
-- [ ] 配置离线缓存策略
-- [ ] 添加桌面图标
+- [x] 创建 manifest.json
+- [x] 注册 Service Worker
+- [x] 配置离线缓存策略
+- [x] 添加桌面图标
 
 ### 验证
-- iOS Safari 可添加到桌面
-- Android Chrome 可添加
-- 添加到桌面后独立打开，无浏览器地址栏
+- [x] iOS Safari 可添加到桌面
+- [x] Android Chrome 可添加
+- [x] 添加到桌面后独立打开，无浏览器地址栏
 
 ---
 
@@ -96,19 +96,19 @@
 **目标**：推送到 GitHub Pages 生成分享链接
 
 ### 任务
-- [ ] 提交所有文件到 Git
-- [ ] 推送到 Bjkuy/resume 仓库
-- [ ] 验证线上访问正常
+- [x] 提交所有文件到 Git
+- [x] 推送到 Bjkuy/resume 仓库
+- [x] 验证线上访问正常
 - [ ] 微信分享测试
 
 ### 验证
-- `https://bjkuy.github.io/resume/translator/` 正常打开
-- 微信内可打开
-- 所有功能可用
+- [x] `https://bjkuy.github.io/resume/translator/` 正常打开
+- [ ] 微信内可打开
+- [ ] 所有功能可用
 
 ---
 
 ## 当前状态
 - **当前步骤**：第2步 — 粘贴翻译核心功能
-- **上一步完成**：第1步 ✅ (2026-06-12)
+- **已完成**：第1步 ✅ | 第5步(PWA) ✅ | 第6步(部署) ✅
 - **开始时间**：2026-06-12
