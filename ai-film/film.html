@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎬 她的早晨 — AI 短片</title>
+    <style>
+        :root {
+            --transition-speed: 1.8s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
+            font-family: "PingFang SC", "Noto Serif SC", "Georgia", serif;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ============================================================
+           影片容器 — 9:16 竖屏
+           ============================================================ */
+        .film-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            aspect-ratio: 9 / 16;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+        }
+
+        @media (min-width: 768px) {
+            .film-container {
+                max-width: 420px;
+                border-radius: 16px;
+            }
+        }
+
+        /* ============================================================
+           场景层
+           ============================================================ */
+        .scene {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity var(--transition-speed) ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .scene.active {
+            opacity: 1;
+            z-index: 2;
+        }
+        .scene.fading {
+            opacity: 0;
+            z-index: 3;
+        }
+
+        /* Ken Burns 缓慢推进 */
+        .scene-inner {
+            position: absolute;
+            inset: -10%;
+            background-size: cover;
+            background-position: center;
+            transform: scale(1);
+            transition: transform 8s ease-out;
+        }
+        .scene.active .scene-inner {
+            transform: scale(1.08);
+        }
+
+        /* ============================================================
+           场景1：清晨房间（CSS 渐变艺术）
+           ============================================================ */
+        .scene-1 .scene-inner {
+            background:
+                /* 窗户光源 */
+                radial-gradient(ellipse at 60% 25%,
+                    rgba(255,220,180,0.7) 0%,
+                    rgba(255,200,150,0.3) 25%,
+                    transparent 55%),
+                /* 阳光束 */
+                linear-gradient(105deg,
+                    transparent 30%,
+                    rgba(255,240,210,0.15) 40%,
+                    rgba(255,220,170,0.2) 45%,
+                    rgba(255,200,140,0.1) 50%,
+                    transparent 55%),
+                /* 墙面 */
+                linear-gradient(180deg,
+                    #f5ebe0 0%,
+                    #ede0d4 40%,
+                    #e8d5c0 100%),
+                /* 地板 */
+                linear-gradient(0deg,
+                    #c4a882 0%,
+                    #d4b896 15%,
+                    transparent 25%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+        }
+        /* 窗帘飘动模拟 */
+        .scene-1 .curtain {
+            position: absolute;
+            top: 0;
+            right: 15%;
+            width: 25%;
+            height: 55%;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.5) 0%,
+                rgba(255,250,240,0.35) 50%,
+                rgba(255,245,235,0.2) 100%);
+            animation: curtainSway 4s ease-in-out infinite;
+            transform-origin: top center;
+            border-radius: 2px;
+            filter: blur(3px);
+        }
+        .scene-1 .curtain:nth-child(2) {
+            right: 16%;
+            width: 20%;
+            animation-delay: 0.6s;
+            opacity: 0.6;
+        }
+        @keyframes curtainSway {
+            0%, 100% { transform: skewX(-1deg); }
+            50% { transform: skewX(2deg); }
+        }
+
+        /* 光粒子 */
+        .dust-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .dust {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255,220,150,0.6);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.3; }
+            100% { transform: translateY(-60px) translateX(20px); opacity: 0; }
+        }
+
+        /* ============================================================
+           场景2：美女安睡
+           ============================================================ */
+        .scene-2 .scene-inner {
+            background:
+                /* 脸部光 */
+                radial-gradient(ellipse at 55% 40%,
+                    rgba(255,210,170,0.5) 0%,
+                    rgba(255,190,150,0.2) 30%,
+                    transparent 50%),
+                /* 枕头和床 */
+                linear-gradient(180deg,
+                    #faf8f5 0%,
+                    #f5f0e8 30%,
+                    #ede5d8 60%,
+                    #e0d5c5 100%),
+                /* 暗角 */
+                radial-gradient(ellipse at center,
+                    transparent 50%,
+                    rgba(20,15,10,0.4) 100%);
+        }
+        /* 呼吸效果 */
+        .scene-2 .breath {
+            position: absolute;
+            top: 38%;
+            left: 48%;
+            width: 30%;
+            height: 15%;
+            background: radial-gradient(ellipse, rgba(255,200,160,0.2), transparent);
+            animation: breathe 3s ease-in-out infinite;
+            border-radius: 50%;
+        }
+        @keyframes breathe {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        /* ============================================================
+           场景3：金毛犬
+           ============================================================ */
+        .scene-3 .scene-inner {
+            background:
+                /* 狗狗身上光 */
+                radial-gradient(ellipse at 50% 70%,
+                    rgba(200,150,80,0.5) 0%,
+                    rgba(180,130,60,0.3) 30%,
+                    transparent 55%),
+                /* 地板 */
+                linear-gradient(0deg,
+                    #c4a882 0%,
+                    #d4b896 40%,
+                    #e0ccb0 100%),
+                /* 环境 */
+                radial-gradient(ellipse at 50% 30%,
+                    rgba(255,220,180,0.2),
+                    transparent 60%),
+                /* 暗角 */
+                radial-gradient(ellipse at center,
+                    transparent 40%,
+                    rgba(10,5,0,0.5) 100%);
+        }
+        /* 尾巴摇动 */
+        .scene-3 .tail-wag {
+            position: absolute;
+            bottom: 25%;
+            right: 35%;
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(180deg, #c49440, #a07030);
+            border-radius: 2px;
+            transform-origin: bottom center;
+            animation: tailWag 1.2s ease-in-out infinite;
+        }
+        @keyframes tailWag {
+            0%, 100% { transform: rotate(-8deg); }
+            50% { transform: rotate(8deg); }
+        }
+
+        /* ============================================================
+           场景4：抚摸互动
+           ============================================================ */
+        .scene-4 .scene-inner {
+            background:
+                /* 手部光 */
+                radial-gradient(ellipse at 50% 55%,
+                    rgba(255,200,150,0.45) 0%,
+                    rgba(255,180,130,0.2) 25%,
+                    transparent 50%),
+                /* 整体暖光 */
+                linear-gradient(180deg,
+                    #f5ede0 0%,
+                    #ede0d0 40%,
+                    #d4c4a8 100%),
+                /* 暗角 */
+                radial-gradient(ellipse at center,
+                    transparent 45%,
+                    rgba(15,10,5,0.35) 100%);
+        }
+        /* 轻柔抚摸动画 */
+        .scene-4 .petting-hand {
+            position: absolute;
+            top: 48%;
+            left: 45%;
+            width: 15%;
+            height: 8%;
+            background: radial-gradient(ellipse, rgba(255,190,150,0.5), rgba(255,170,130,0.2));
+            border-radius: 50%;
+            animation: gentlePet 2.5s ease-in-out infinite;
+        }
+        @keyframes gentlePet {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            30% { transform: translateY(4px) translateX(3px); }
+            60% { transform: translateY(2px) translateX(6px); }
+            90% { transform: translateY(5px) translateX(2px); }
+        }
+
+        /* ============================================================
+           场景5：窗边背影
+           ============================================================ */
+        .scene-5 .scene-inner {
+            background:
+                /* 窗外光 */
+                radial-gradient(ellipse at 50% 30%,
+                    rgba(255,220,160,0.6) 0%,
+                    rgba(255,180,100,0.3) 35%,
+                    transparent 55%),
+                /* 人物剪影区 */
+                linear-gradient(180deg,
+                    #3a3028 0%,
+                    #2a2218 40%,
+                    #1a1208 100%),
+                /* 地板反光 */
+                radial-gradient(ellipse at 50% 85%,
+                    rgba(200,150,80,0.2),
+                    transparent 40%);
+        }
+        /* 咖啡热气 */
+        .scene-5 .steam {
+            position: absolute;
+            top: 30%;
+            left: 47%;
+            width: 8px;
+            height: 20px;
+            background: rgba(255,240,220,0.3);
+            border-radius: 50%;
+            filter: blur(4px);
+            animation: steamRise 3s ease-out infinite;
+        }
+        .scene-5 .steam:nth-child(2) {
+            left: 50%;
+            animation-delay: 0.8s;
+            width: 6px;
+        }
+        .scene-5 .steam:nth-child(3) {
+            left: 49%;
+            animation-delay: 1.6s;
+            width: 5px;
+        }
+        @keyframes steamRise {
+            0% { transform: translateY(0) scale(1); opacity: 0.5; }
+            100% { transform: translateY(-50px) scale(3); opacity: 0; }
+        }
+
+        /* ============================================================
+           字幕
+           ============================================================ */
+        .subtitles {
+            position: absolute;
+            bottom: 12%;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+        }
+        .subtitle-text {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 14px;
+            letter-spacing: 2px;
+            border-radius: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.8s ease;
+        }
+        .subtitle-text.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ============================================================
+           片头/片尾
+           ============================================================ */
+        .title-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+        .title-overlay.visible {
+            opacity: 1;
+        }
+        .title-overlay .film-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 4px;
+            text-shadow: 0 0 30px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+        .title-overlay .film-subtitle {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 3px;
+        }
+
+        /* ============================================================
+           播放控制
+           ============================================================ */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 16px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .film-container:hover .controls,
+        .film-container:active .controls {
+            opacity: 1;
+        }
+        .ctrl-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .ctrl-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* ============================================================
+           加载/过渡遮罩
+           ============================================================ */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s;
+            pointer-events: none;
+        }
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse {
+            0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ============================================================
+           响应式
+           ============================================================ */
+        @media (max-width: 480px) {
+            .film-container {
+                max-width: 100%;
+                aspect-ratio: auto;
+                height: 100vh;
+                height: 100dvh;
+                border-radius: 0;
+            }
+            .title-overlay .film-title { font-size: 24px; }
+            .subtitle-text { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="film-container" id="film">
+
+        <!-- 加载遮罩 -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+
+        <!-- 片头 -->
+        <div class="title-overlay" id="titleOverlay">
+            <div class="film-title">她 的 早 晨</div>
+            <div class="film-subtitle">HER MORNING</div>
+        </div>
+
+        <!-- ===== 场景1：清晨房间 ===== -->
+        <div class="scene scene-1" data-scene="0">
+            <div class="scene-inner"></div>
+            <div class="curtain"></div>
+            <div class="curtain"></div>
+            <div class="dust-particles" id="dust1"></div>
+        </div>
+
+        <!-- ===== 场景2：美女安睡 ===== -->
+        <div class="scene scene-2" data-scene="1">
+            <div class="scene-inner"></div>
+            <div class="breath"></div>
+        </div>
+
+        <!-- ===== 场景3：床边的金毛 ===== -->
+        <div class="scene scene-3" data-scene="2">
+            <div class="scene-inner"></div>
+            <div class="tail-wag"></div>
+        </div>
+
+        <!-- ===== 场景4：抚摸互动 ===== -->
+        <div class="scene scene-4" data-scene="3">
+            <div class="scene-inner"></div>
+            <div class="petting-hand"></div>
+        </div>
+
+        <!-- ===== 场景5：窗边背影 ===== -->
+        <div class="scene scene-5" data-scene="4">
+            <div class="scene-inner"></div>
+            <div class="steam"></div>
+            <div class="steam"></div>
+            <div class="steam"></div>
+        </div>
+
+        <!-- 字幕 -->
+        <div class="subtitles">
+            <span class="subtitle-text" id="subtitle"></span>
+        </div>
+
+        <!-- 播放控制 -->
+        <div class="controls" id="controls">
+            <button class="ctrl-btn" id="btnPrev" title="上一个镜头">⏮</button>
+            <button class="ctrl-btn" id="btnPlay" title="播放/暂停">⏯</button>
+            <button class="ctrl-btn" id="btnNext" title="下一个镜头">⏭</button>
+            <button class="ctrl-btn" id="btnRestart" title="重新播放">🔄</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        // ============================================================
+        //  场景数据
+        // ============================================================
+        var scenes = [
+            { duration: 8000, subtitle: '清晨六点半，第一缕阳光照进房间', title: false },
+            { duration: 6000, subtitle: '她还在睡梦中，睫毛微微颤动', title: false },
+            { duration: 8000, subtitle: '金毛安静地守在床边，尾巴轻摇', title: false },
+            { duration: 10000, subtitle: '她伸手摸了摸它的头\n温暖从指尖传来', title: false },
+            { duration: 10000, subtitle: '一杯热咖啡，一个安静的清晨\n新的一天开始了', title: false },
+        ];
+
+        var currentScene = -1;
+        var isPlaying = true;
+        var sceneTimer = null;
+        var totalDuration = scenes.reduce(function(s, sc) { return s + sc.duration; }, 0);
+
+        // ===== DOM refs =====
+        var film = document.getElementById('film');
+        var loadingOverlay = document.getElementById('loadingOverlay');
+        var titleOverlay = document.getElementById('titleOverlay');
+        var subtitleEl = document.getElementById('subtitle');
+        var sceneEls = film.querySelectorAll('.scene');
+        var btnPlay = document.getElementById('btnPlay');
+        var btnPrev = document.getElementById('btnPrev');
+        var btnNext = document.getElementById('btnNext');
+        var btnRestart = document.getElementById('btnRestart');
+
+        // ============================================================
+        //  生成灰尘粒子（场景1）
+        // ============================================================
+        var dustContainer = document.getElementById('dust1');
+        for (var i = 0; i < 15; i++) {
+            var dust = document.createElement('div');
+            dust.className = 'dust';
+            dust.style.left = (20 + Math.random() * 60) + '%';
+            dust.style.top = (10 + Math.random() * 50) + '%';
+            dust.style.animationDelay = (Math.random() * 6) + 's';
+            dust.style.animationDuration = (4 + Math.random() * 8) + 's';
+            dustContainer.appendChild(dust);
+        }
+
+        // ============================================================
+        //  场景切换
+        // ============================================================
+        function showScene(index) {
+            if (index === currentScene) return;
+            if (index < 0 || index >= scenes.length) {
+                // 播放完毕 → 循环
+                if (index >= scenes.length) {
+                    showTitle();
+                    setTimeout(function() { showScene(0); }, 2500);
+                }
+                return;
+            }
+
+            var prevScene = currentScene;
+            currentScene = index;
+
+            // 淡出旧场景
+            if (prevScene >= 0 && sceneEls[prevScene]) {
+                sceneEls[prevScene].classList.remove('active');
+                sceneEls[prevScene].classList.add('fading');
+                setTimeout(function() {
+                    sceneEls[prevScene].classList.remove('fading');
+                }, 1800);
+            }
+
+            // 淡入新场景
+            sceneEls[index].classList.add('active');
+
+            // 字幕
+            showSubtitle(scenes[index].subtitle);
+
+            // 定时下一个
+            if (isPlaying) {
+                clearTimeout(sceneTimer);
+                sceneTimer = setTimeout(function() {
+                    showScene(currentScene + 1);
+                }, scenes[index].duration);
+            }
+
+            console.log('🎬 场景', index + 1, '/', scenes.length,
+                '(' + (scenes[index].duration / 1000) + 's)');
+        }
+
+        function showSubtitle(text) {
+            subtitleEl.classList.remove('visible');
+            subtitleEl.textContent = '';
+            // 短暂延迟后显示
+            setTimeout(function() {
+                subtitleEl.textContent = text;
+                subtitleEl.classList.add('visible');
+            }, 400);
+            // 场景结束前隐藏
+            var sceneDuration = scenes[currentScene] ? scenes[currentScene].duration : 6000;
+            setTimeout(function() {
+                subtitleEl.classList.remove('visible');
+            }, sceneDuration - 1200);
+        }
+
+        function showTitle() {
+            titleOverlay.classList.add('visible');
+            setTimeout(function() {
+                titleOverlay.classList.remove('visible');
+            }, 2500);
+        }
+
+        // ============================================================
+        //  控制按钮
+        // ============================================================
+        btnPlay.addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            btnPlay.textContent = isPlaying ? '⏯' : '▶';
+            if (isPlaying && currentScene >= 0 && currentScene < scenes.length) {
+                var remaining = scenes[currentScene].duration;
+                sceneTimer = setTimeout(function() {
+                    showScene(currentScene + 1);
+                }, remaining);
+            } else {
+                clearTimeout(sceneTimer);
+            }
+        });
+
+        btnPrev.addEventListener('click', function() {
+            clearTimeout(sceneTimer);
+            showScene(Math.max(0, currentScene - 1));
+        });
+
+        btnNext.addEventListener('click', function() {
+            clearTimeout(sceneTimer);
+            showScene(currentScene + 1);
+        });
+
+        btnRestart.addEventListener('click', function() {
+            clearTimeout(sceneTimer);
+            // 清除所有场景
+            sceneEls.forEach(function(el) {
+                el.classList.remove('active', 'fading');
+            });
+            subtitleEl.classList.remove('visible');
+            currentScene = -1;
+            isPlaying = true;
+            btnPlay.textContent = '⏯';
+            showTitle();
+            setTimeout(function() { showScene(0); }, 1200);
+        });
+
+        // ============================================================
+        //  键盘控制
+        // ============================================================
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case ' ': e.preventDefault(); btnPlay.click(); break;
+                case 'ArrowLeft': btnPrev.click(); break;
+                case 'ArrowRight': btnNext.click(); break;
+                case 'r': btnRestart.click(); break;
+            }
+        });
+
+        // ============================================================
+        //  触摸滑动
+        // ============================================================
+        var touchStartY = 0;
+        film.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        });
+        film.addEventListener('touchend', function(e) {
+            var diff = touchStartY - e.changedTouches[0].clientY;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) btnNext.click();
+                else btnPrev.click();
+            }
+        });
+
+        // ============================================================
+        //  开始
+        // ============================================================
+        function start() {
+            // 隐藏加载遮罩
+            setTimeout(function() {
+                loadingOverlay.classList.add('hidden');
+                setTimeout(function() { loadingOverlay.remove(); }, 800);
+            }, 600);
+
+            // 片头 → 场景1
+            showTitle();
+            setTimeout(function() {
+                showScene(0);
+            }, 1800);
+        }
+
+        // 稍等后开始（让 CSS 动画就绪）
+        setTimeout(start, 500);
+
+        console.log('🎬《她的早晨》· 5个场景 · ' + (totalDuration/1000) + '秒');
+        console.log('   空格键暂停 | ← → 切换镜头 | R 重播 | 上下滑动切换');
+    })();
+    </script>
+</body>
+</html>
