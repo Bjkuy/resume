@@ -305,6 +305,17 @@
             color: var(--accent-cyan);
         }
 
+        /* 翻译加载中 */
+        .text-line.loading {
+            opacity: 0.7;
+            animation: pulse 1.2s ease-in-out infinite;
+            border-left-color: rgba(255,255,255,0.3);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.4; }
+        }
+
         .text-line .line-label {
             font-size: 11px;
             color: var(--text-secondary);
@@ -582,7 +593,26 @@
                 pasteInput.placeholder = '在这里粘贴中文文字...\n\n支持多段落，会自动分行显示';
             }
 
-            // TODO: 第2步 — 如果已有翻译结果，重新翻译
+            // 如果已有翻译结果 → 全部恢复原文
+            if (state.lines.length > 0) {
+                var hasTranslated = false;
+                for (var i = 0; i < state.lines.length; i++) {
+                    if (state.lines[i].isTranslated) {
+                        hasTranslated = true;
+                        state.lines[i].isTranslated = false;
+                        state.lines[i].translatedText = null;
+                        state.lines[i].loading = false;
+                    }
+                }
+                if (hasTranslated) {
+                    // 重新渲染：全部回到原文状态
+                    var lineEls = linesCont.querySelectorAll('.text-line');
+                    for (var j = 0; j < lineEls.length; j++) {
+                        lineEls[j].textContent = state.lines[j].text;
+                        lineEls[j].classList.remove('translated', 'loading');
+                    }
+                }
+            }
         });
 
         // ===== 模式切换 =====
@@ -600,15 +630,153 @@
             modeUrl.classList.toggle('active', state.mode === 'url');
         });
 
-        // ===== 粘贴翻译按钮（占位 — 第2步实现） =====
-        btnPaste.addEventListener('click', function() {
-            const text = pasteInput.value.trim();
-            if (!text) {
-                alert('请先粘贴要翻译的文字');
+        // ============================================================
+        //  第2步：智能分段 + 渲染 + 翻译核心
+        // ============================================================
+
+        // ===== 智能分段函数 =====
+        function smartSegment(text) {
+            if (!text) return [];
+            // 按句号、问号、感叹号、换行分割（保留中文和英文标点）
+            var raw = text.split(/[.。!！?？\n\r]+/);
+            var result = [];
+            for (var i = 0; i < raw.length; i++) {
+                var trimmed = raw[i].trim();
+                if (trimmed.length > 0) {
+                    result.push(trimmed);
+                }
+            }
+            // 没有任何标点分隔符 → 整段作为一行
+            if (result.length === 0 && text.trim().length > 0) {
+                result.push(text.trim());
+            }
+            return result;
+        }
+
+        // ===== 调用 Google 翻译 API =====
+        function callTranslateAPI(text, direction) {
+            var targetLang = (direction === 'en2zh') ? 'zh-CN' : 'en';
+            var url = 'https://translate.googleapis.com/translate_a/single' +
+                '?client=gtx&sl=auto&tl=' + targetLang +
+                '&dt=t&q=' + encodeURIComponent(text);
+
+            return fetch(url).then(function(response) {
+                if (!response.ok) throw new Error('网络请求失败 (' + response.status + ')');
+                return response.json();
+            }).then(function(data) {
+                // 解析响应: [[["译文","原文",...]], null, "en"]
+                if (data && data[0] && data[0].length > 0) {
+                    var parts = [];
+                    for (var i = 0; i < data[0].length; i++) {
+                        if (data[0][i] && data[0][i][0]) {
+                            parts.push(data[0][i][0]);
+                        }
+                    }
+                    var result = parts.join('');
+                    if (result) return result;
+                }
+                throw new Error('翻译结果为空');
+            });
+        }
+
+        // ===== 渲染文本行列表 =====
+        function renderLines(segments) {
+            // 清空旧内容
+            linesCont.innerHTML = '';
+            state.lines = [];
+
+            for (var i = 0; i < segments.length; i++) {
+                var lineData = {
+                    id: i,
+                    text: segments[i],
+                    translatedText: null,
+                    isTranslated: false,
+                    loading: false
+                };
+                state.lines.push(lineData);
+
+                var el = document.createElement('div');
+                el.className = 'text-line';
+                el.textContent = segments[i];
+                el.setAttribute('data-line-id', String(i));
+                linesCont.appendChild(el);
+            }
+
+            // 切换显示
+            emptyState.style.display = 'none';
+            linesCont.style.display = 'flex';
+
+            console.log('[分段] 共拆分为 ' + segments.length + ' 行');
+        }
+
+        // ===== 点击行 → 翻译 / 恢复 =====
+        function toggleLineTranslation(el, lineData) {
+            // 加载中 → 忽略点击
+            if (lineData.loading) return;
+
+            // 已有翻译 → 切回原文
+            if (lineData.isTranslated) {
+                el.textContent = lineData.text;
+                el.classList.remove('translated');
+                lineData.isTranslated = false;
                 return;
             }
-            // 第2步将在这里实现分段 + 渲染 + 翻译
-            alert('🚧 翻译功能将在第2步实现\n\n已收到你的文字，共 ' + text.length + ' 个字符');
+
+            // 开始翻译
+            lineData.loading = true;
+            el.classList.add('loading');
+            el.textContent = '⏳ 翻译中...';
+
+            callTranslateAPI(lineData.text, state.direction)
+                .then(function(translated) {
+                    lineData.translatedText = translated;
+                    lineData.isTranslated = true;
+                    lineData.loading = false;
+                    el.textContent = translated;
+                    el.classList.remove('loading');
+                    el.classList.add('translated');
+                })
+                .catch(function(err) {
+                    console.error('[翻译失败] 行' + lineData.id + ':', err.message);
+                    lineData.loading = false;
+                    lineData.isTranslated = false;
+                    el.textContent = lineData.text + '  ❌ 翻译失败，点击重试';
+                    el.classList.remove('loading');
+                });
+        }
+
+        // ===== 事件委托：监听行点击 =====
+        linesCont.addEventListener('click', function(e) {
+            var lineEl = e.target.closest('.text-line');
+            if (!lineEl) return;
+            var id = parseInt(lineEl.getAttribute('data-line-id'), 10);
+            if (isNaN(id) || !state.lines[id]) return;
+            toggleLineTranslation(lineEl, state.lines[id]);
+        });
+
+        // ===== 粘贴翻译按钮 =====
+        btnPaste.addEventListener('click', function() {
+            var text = pasteInput.value.trim();
+            if (!text) {
+                // 输入框闪红提示
+                pasteInput.style.borderColor = '#FF5252';
+                pasteInput.focus();
+                setTimeout(function() {
+                    pasteInput.style.borderColor = '';
+                }, 800);
+                return;
+            }
+
+            var segments = smartSegment(text);
+            if (segments.length === 0) {
+                alert('未能识别有效文字，请检查输入内容');
+                return;
+            }
+
+            renderLines(segments);
+
+            // 滚动到结果区
+            document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
         });
 
         // ===== 网址抓取按钮（占位 — 第3步实现） =====
@@ -623,10 +791,10 @@
         });
 
         // ===== 日志 =====
-        console.log('🌐 翻译小工具 · 第1步：基础布局就绪');
+        console.log('🌐 翻译小工具 · 第2步：粘贴翻译核心功能就绪');
         console.log('   翻译方向:', state.direction);
         console.log('   当前模式:', state.mode);
-        console.log('   准备进入第2步：粘贴翻译核心功能');
+        console.log('   功能: 粘贴 → 智能分行 → 点击翻译 → 再点恢复');
     })();
     </script>
 
